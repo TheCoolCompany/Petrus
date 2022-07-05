@@ -68,10 +68,11 @@ public class Circles {
 
         private Random rnd = new Random();
         private List<Circle> circles;
-        protected static final int MAX_CIRCLES = 1 + ThreadLocalRandom.current().nextInt(30, 1000);
-        protected static final int MAX_Hail = 1 + ThreadLocalRandom.current().nextInt(200, 400);
+        private List<Rect> rects;
+        protected static final int MAX_CIRCLES = ThreadLocalRandom.current().nextInt(30, 1000);
+        protected static final int MAX_Hail = ThreadLocalRandom.current().nextInt(200, 400);
         int xSpeed = 3;
-        int Petri = 2; 
+        int Petri = 3; 
         int lol = 5;
         protected int maxsun = 1;
         private int oldPetri = 0;
@@ -79,6 +80,7 @@ public class Circles {
         public TestPane() {
             
             circles = new ArrayList<>(MAX_CIRCLES);
+            rects= new ArrayList<>(MAX_CIRCLES);
             
             Timer timer = new Timer(20, new ActionListener() {
                 @Override
@@ -88,6 +90,7 @@ public class Circles {
                     if(oldPetri != Petri){
                         System.out.println(t);
                         circles.removeAll(circles);
+                        rects.removeAll(rects);
                         if(Petri == 1){
                             circles.add(createSun());
                         }
@@ -130,7 +133,7 @@ public class Circles {
                         while (circles.size() < MAX_Hail) {
                             circles.add(hail());
                         }
-                        List<Circle> stopmove = new ArrayList<>(MAX_CIRCLES);
+                        List<Circle> stopmove = new ArrayList<>(MAX_Hail);
                         for (Circle circle : circles) {
                             Point p = circle.getLocation();
                             p.y += circle.getYDelta();
@@ -149,7 +152,25 @@ public class Circles {
                         repaint();
                     } 
                     else if(Petri == 3){
-                        
+                        while(rects.size()< MAX_Hail){
+                            rects.add(bomb());
+                        }
+                        List<Rect> destroy = new ArrayList<>(MAX_CIRCLES);
+                        for (Rect rect : rects){
+                            Point p = rect.getLocation();
+                            p.y += rect.getyDelta();
+                            if(p.y > getHeight()){
+                                destroy.add(rect);
+                            }
+                            else if(p.x > getWidth()){
+                                destroy.add(rect);
+                            }
+                            else{
+                                rect.setLocation(p);
+                            }
+                        }
+                        rects.removeAll(destroy);
+                        repaint();
                     }
                 
                 }   
@@ -172,14 +193,17 @@ public class Circles {
         protected Circle rain() 
         {
             int x = rnd.nextInt(getWidth());
+            int c1 = rnd.nextInt(256);
+            int c2 = rnd.nextInt(256);
+            int c3 = rnd.nextInt(256);
             int radius = 3 + rnd.nextInt(10);           
             int speedy = 1 + ThreadLocalRandom.current().nextInt(1, 3);
             int speedx = speedy + ThreadLocalRandom.current().nextInt(1, 10);
-            int y = 5;
+            int y = ThreadLocalRandom.current().nextInt(radius, 100);
             if (x + radius > getWidth()) {
                 x = getWidth() - radius;
             }
-            Circle circle = new Circle(radius, new Color(100, 0, 255));
+            Circle circle = new Circle(radius, new Color(c1, c2, c3));
             circle.setLocation(x, y);
             circle.setYDelta(speedx); 
             circle.setXDelta(speedy);  
@@ -189,17 +213,34 @@ public class Circles {
         protected Circle hail() 
         {
             int x = rnd.nextInt(getWidth());
+            int c1 = rnd.nextInt(256);
+            int c2 = rnd.nextInt(256);
+            int c3 = rnd.nextInt(256);
             int radius = 10;//rnd.nextInt(10);           
             int speedy = 5 + ThreadLocalRandom.current().nextInt(1, 10);
-            int y = 5;
+            int y = ThreadLocalRandom.current().nextInt(radius, 100);
             if (x + radius > getWidth()) {
                 x = getWidth() - radius;
             }
-            Circle circle = new Circle(radius, new Color(128, 128, 128));
+            Circle circle = new Circle(radius, new Color(c1, c2, c3));
             circle.setLocation(x, y);
             circle.setYDelta(speedy);  
             return circle;
 
+        }
+        protected Rect bomb(){
+            int x = rnd.nextInt(getWidth());
+            
+            int width = 5;
+            int speedy = 8;
+            int y = ThreadLocalRandom.current().nextInt(width, 200);
+            Rect rect = new Rect(width, new Color(0, 0, 255));
+            if (x + width > getWidth()){
+                x = getWidth() - width;
+            }
+            rect.setLocation(x, y);
+            rect.setYDelta(speedy);
+            return rect;
         }
        
         
@@ -224,6 +265,9 @@ public class Circles {
             }
             for(Circle rainbow : circles){
                 rainbow.paint(g);
+            }
+            for(Rect bomb : rects){
+                bomb.paint(g);
             }
             g2d.dispose();
         }
@@ -269,10 +313,42 @@ public class Circles {
             g.fillOval(x, y, radius, radius);
             
         }
-      
     } 
-  
-   
+    public static class Rect{
+        private int x, y, width;
+        private final Color c;
+        private int xDelta, yDelta;
+        public Rect(int width, Color c){
+            this.width = width;
+            this.c = c;
+        }
+        public void setLocation(int x, int y){
+            this.x = x;
+            this.y = y;
+        }
+        public void setLocation(Point p) {
+            setLocation(p.x, p.y);
+        }
+        public Point getLocation(){
+            return new Point(x, y);
+        }
+        public void setYDelta(int yDelta){
+            this.yDelta = yDelta;
+        }
+        public void setXDelta(int xDelta){
+            this.xDelta = xDelta;
+        }
+        public int getyDelta(){
+            return yDelta;
+        }
+        public int getxDelta(){
+            return xDelta;
+        }
+        public void paint(Graphics g){
+            g.setColor(c);
+            g.fillRect(x, y, width, width);
+        }
+    }   
 }  
    
 
